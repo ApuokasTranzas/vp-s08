@@ -60,11 +60,195 @@ main{padding:16px!important}.hero{display:block!important}.title{font-size:30px!
 }
 </style>
 
+
+<style id="vp-mobile-v3">
+@media (max-width: 800px) {
+  #rows .task-row {
+    display: grid !important;
+    grid-template-columns: 26px minmax(0, 1fr) !important;
+    grid-template-areas:
+      "check task"
+      ". owner"
+      ". deadline"
+      ". status" !important;
+    gap: 5px 9px !important;
+    padding: 13px !important;
+    margin: 0 0 8px !important;
+    border: 1px solid #deded9 !important;
+    border-radius: 12px !important;
+    background: rgba(255,255,255,.94) !important;
+  }
+  #rows .task-row > * {
+    min-width: 0 !important;
+    width: auto !important;
+    padding: 0 !important;
+    border: 0 !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+  }
+  #rows .task-row .check {
+    grid-area: check !important;
+    width: 20px !important;
+    height: 20px !important;
+    margin-top: 2px !important;
+  }
+  #rows .task-row .task-name {
+    grid-area: task !important;
+    font-size: 15px !important;
+    line-height: 1.32 !important;
+  }
+  #rows .task-row .owner {
+    grid-area: owner !important;
+    display: block !important;
+    font-size: 13px !important;
+    color: #555 !important;
+  }
+  #rows .task-row .owner::before {
+    content: "👤 Atsakingas: " !important;
+    font-weight: 700 !important;
+    color: #222 !important;
+  }
+  #rows .task-row .deadline {
+    grid-area: deadline !important;
+    display: block !important;
+    font-size: 13px !important;
+    color: #555 !important;
+  }
+  #rows .task-row .deadline::before {
+    content: "📅 Iki: " !important;
+    font-weight: 700 !important;
+    color: #222 !important;
+  }
+  #rows .task-row .status {
+    grid-area: status !important;
+    display: block !important;
+    justify-self: start !important;
+  }
+}
+</style>
+
+
+<style id="vp-water-progress">
+.category-progress-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 18px;
+}
+.category-card {
+  position: relative;
+  min-height: 108px;
+  padding: 16px;
+  border: 1px solid #d7e2e8;
+  border-radius: 14px;
+  background: rgba(255,255,255,.88);
+  overflow: hidden;
+  isolation: isolate;
+}
+.category-card-content {
+  position: relative;
+  z-index: 3;
+}
+.category-card-title {
+  font-size: 15px;
+  font-weight: 800;
+  margin-bottom: 5px;
+}
+.category-card-progress {
+  font-size: 13px;
+  color: #5d7180;
+}
+.water-track {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 62%;
+  background: rgba(208,231,242,.55);
+  overflow: hidden;
+  z-index: 1;
+}
+.water-level {
+  position: absolute;
+  left: -8%;
+  bottom: 0;
+  width: 116%;
+  height: 100%;
+  transform-origin: bottom center;
+  transition: height 900ms cubic-bezier(.22,.8,.24,1);
+  background: linear-gradient(to top, rgba(112,180,208,.48), rgba(180,222,238,.28));
+  overflow: hidden;
+}
+.water-level::before,
+.water-level::after {
+  content: "";
+  position: absolute;
+  left: -10%;
+  width: 120%;
+  height: 22px;
+  top: -11px;
+  border-radius: 50%;
+  background: rgba(232,248,255,.72);
+}
+.water-level::before {
+  animation: vp-wave 4.2s linear infinite;
+}
+.water-level::after {
+  top: -7px;
+  opacity: .48;
+  animation: vp-wave-reverse 5.5s linear infinite;
+}
+@keyframes vp-wave {
+  from { transform: translateX(-7%) rotate(0deg); }
+  50% { transform: translateX(7%) rotate(2deg); }
+  to { transform: translateX(-7%) rotate(0deg); }
+}
+@keyframes vp-wave-reverse {
+  from { transform: translateX(7%) rotate(0deg); }
+  50% { transform: translateX(-7%) rotate(-2deg); }
+  to { transform: translateX(7%) rotate(0deg); }
+}
+.category-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(to top, rgba(255,255,255,.10), rgba(255,255,255,.42));
+  z-index: 2;
+}
+@media (max-width: 800px) {
+  .category-progress-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .category-card {
+    min-height: 96px;
+    padding: 13px;
+  }
+}
+@media (max-width: 380px) {
+  .category-progress-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .category-card-title {
+    font-size: 14px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .water-level,
+  .water-level::before,
+  .water-level::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+</style>
+
 </head><body><main><div class="hero"><div><div class="eyebrow">Vilnelės pankai · 8 sezonas</div><div class="title">Atidarymo renginio dashboard</div><div class="muted">MVP projekto valdymui — darbai, atsakomybės ir terminai vienoje vietoje.</div></div><div class="actions"><button class="btn" type="button" onclick="exportTasks()">⬇️ Eksportuoti JSON</button>
 <button class="btn" type="button" onclick="document.getElementById('jsonFile').click()">⬆️ Importuoti JSON</button>
 <input id="jsonFile" type="file" accept=".json,application/json" style="display:none" onchange="importTasks(event)">
 <button class="btn" type="button" onclick="resetAll()">Atstatyti MVP</button></div></div><div class="grid"><div class="card"><div class="muted">Visi darbai</div><div class="metric" id="all">25</div></div><div class="card"><div class="muted">Atlikta</div><div class="metric" id="done">7</div></div><div class="card"><div class="muted">Vykdoma</div><div class="metric" id="doing">0</div></div><div class="card"><div class="muted">Progresas</div><div class="metric" id="pct">28%</div><div class="bar"><div class="fill" id="fill" style="width: 28%;"></div></div></div></div><div id="jsonStatus" class="note" style="display:none;margin-top:12px"></div>
-<div class="section"><h2>Programos karkasas</h2><div class="note"><b>Renginio eiga:</b> svečių rinkimasis → muzika / Sebastian → Ignės įžanga → bendra kvėpavimo sesija → 8–10 žmonių grupės vandenyje su prižiūrėtojais → atšilimo pratimai → bendras finalinis ratas → grupinė nuotrauka.</div></div><div class="section"><h2>Užduotys</h2><div class="tasks"><div class="row head"><div></div><div>Darbas</div><div>Atsakingas</div><div>Terminas</div><div>Statusas</div></div><div id="rows"><div class="row"><input class="check" type="checkbox" checked="" onchange="toggle(0,this.checked)"><div><b>Patvirtinti renginio datą ir vietą</b></div><div>Vaidas</div><div>—</div><div><span class="pill done">Atlikta</span></div></div><div class="row"><input class="check" type="checkbox" checked="" onchange="toggle(1,this.checked)"><div><b>Patvirtinti Wim Hof instruktorius</b></div><div>Ignė</div><div>—</div><div><span class="pill done">Atlikta</span></div></div><div class="row"><input class="check" type="checkbox" checked="" onchange="toggle(2,this.checked)"><div><b>Patvirtinti Sebastian būgnus</b></div><div>Sebastian</div><div>—</div><div><span class="pill done">Atlikta</span></div></div><div class="row"><input class="check" type="checkbox" onchange="toggle(3,this.checked)"><div><b>Sudaryti prižiūrėtojų komandą</b></div><div>—</div><div>—</div><div><span class="pill todo">Nepradėta</span></div></div><div class="row"><input class="check" type="checkbox" onchange="toggle(4,this.checked)"><div><b>Parengti saugumo ir pirmosios pagalbos planą</b></div><div>—</div><div>—</div><div><span class="pill todo">Nepradėta</span></div></div><div class="row"><input class="check" type="checkbox" onchange="toggle(5,this.checked)"><div><b>Sudaryti dalyvių grupių / eilių planą</b></div><div>—</div><div>—</div><div><span class="pill todo">Nepradėta</span></div></div><div class="row"><input class="check" type="checkbox" onchange="toggle(6,this.checked)"><div><b>Parengti kvėpavimo sesijos scenarijų</b></div><div>—</div><div>—</div><div><span class="pill todo">Nepradėta</span></div></div><div class="row"><input class="check" type="checkbox" onchange="toggle(7,this.checked)"><div><b>Parengti atšilimo pratimų planą</b></div><div>—</div><div>—</div><div><span class="pill todo">Nepradėta</span></div></div><div class="row"><input class="check" type="checkbox" onchange="toggle(8,this.checked)"><div><b>Sutvarkyti muziką / garso įrangą</b></div><div>—</div><div>—</div><div><span class="pill todo">Nepradėta</span></div></div><div class="row"><input class="check" type="checkbox" checked="" onchange="toggle(9,this.checked)"><div><b>Užtikrinti garsiakalbį su mikrofonu</b></div><div>Silvija</div><div>—</div><div><span class="pill done">Atlikta</span></div></div><div class="row"><input class="check" type="checkbox" onchange="toggle(10,this.checked)"><div><b>Parengti komunikaciją ir dalyvių instrukciją</b></div><div>—</div><div>—</div><div><span class="pill todo">Nepradėta</span></div></div><div class="row"><input class="check" type="checkbox" onchange="toggle(11,this.checked)"><div><b>Patvirtinti Ignės įžanginę kalbą</b></div><div>Ignė</div><div>—</div><div><span class="pill done">Nepradėta</span></div></div><div class="row"><input class="check" type="checkbox" onchange="toggle(12,this.checked)"><div><b>Suplanuoti foto / grupinę nuotrauką</b></div><div>—</div><div>—</div><div><span class="pill todo">Nepradėta</span></div></div><div class="row"><input class="check" type="checkbox" checked="" onchange="toggle(13,this.checked)"><div><b>Parengti renginio dienos minutėmis grafiką</b></div><div>Vaidas</div><div>—</div><div><span class="pill done">Atlikta</span></div></div><div class="row"><input class="check" type="checkbox" onchange="toggle(14,this.checked)"><div><b>Organizuoti pavėsinę / pastogę</b></div><div>Vaidas</div><div>—</div><div><span class="pill done">Nepradėta</span></div></div><div class="row"><input class="check" type="checkbox" onchange="toggle(15,this.checked)"><div><b>Suorganizuoti laužavietę</b></div><div>—</div><div>—</div><div><span class="pill todo">Nepradėta</span></div></div><div class="row"><input class="check" type="checkbox" onchange="toggle(16,this.checked)"><div><b>Suorganizuoti malkų laužui</b></div><div>—</div><div>—</div><div><span class="pill todo">Nepradėta</span></div></div><div class="row"><input class="check" type="checkbox" checked="" onchange="toggle(17,this.checked)"><div><b>Paskirti atsakingą už laužo priežiūrą</b></div><div>—</div><div>—</div><div><span class="pill done">Atlikta</span></div></div><div class="row"><input class="check" type="checkbox" onchange="toggle(18,this.checked)"><div><b>Išsiųsti senbuviams komunikaciją dėl kepurių ir poncho</b></div><div>—</div><div>—</div><div><span class="pill done">Nepradėta</span></div></div><div class="row"><input class="check" type="checkbox" onchange="toggle(19,this.checked)"><div><b>Suderinti pirtį su „Ivanas muša gongą“</b></div><div>—</div><div>—</div><div><span class="pill todo">Nepradėta</span></div></div><div class="row"><input class="check" type="checkbox" onchange="toggle(20,this.checked)"><div><b>Sukontaktuoti su „Sengirės“ fondu</b></div><div>Ignas</div><div>—</div><div><span class="pill todo">Nepradėta</span></div></div><div class="row"><input class="check" type="checkbox" onchange="toggle(21,this.checked)"><div><b>Sukontaktuoti dėl lauko darželio WC</b></div><div>—</div><div>—</div><div><span class="pill todo">Nepradėta</span></div></div><div class="row"><input class="check" type="checkbox" onchange="toggle(22,this.checked)"><div><b>Patikrinti lokaciją dvi savaites iki renginio</b></div><div>Vaidas</div><div>2026-09-20</div><div><span class="pill todo">Nepradėta</span></div></div><div class="row"><input class="check" type="checkbox" onchange="toggle(23,this.checked)"><div><b>Susisiekti su žurnalistais</b></div><div>Ignė, Ieva, Gabrielė</div><div>—</div><div><span class="pill todo">Nepradėta</span></div></div><div class="row"><input class="check" type="checkbox" checked="" onchange="toggle(24,this.checked)"><div><b>Pirtis</b></div><div>Liudas</div><div>—</div><div><span class="pill done">Atlikta</span></div></div></div></div></div><div class="section"><h2>Kol kas svarbiausi nepatvirtinti dalykai</h2><div class="grid"><div class="card"><b>Vieta</b><p class="muted">Patvirtinti vietą, vandens telkinį, prieigas ir infrastruktūrą.</p></div><div class="card"><b>Saugumas</b><p class="muted">Sudėlioti prižiūrėtojus, pirmąją pagalbą, grupių valdymą ir avarinį planą.</p></div><div class="card"><b>Žmonės</b><p class="muted">Patvirtinti Ignę, Sebastianą, instruktorius ir atšilimo vedėjus.</p></div><div class="card"><b>Komunikacija</b><p class="muted">Kvietimas, registracija, dalyvių instrukcijos ir renginio dienos komunikacija.</p></div></div></div></main><script>let tasks=[['Patvirtinti renginio datą ir vietą','Vaidas','—','done'],['Patvirtinti Wim Hof instruktorius','Ignė','—','done'],['Patvirtinti Sebastian būgnus','Sebastian','—','done'],['Sudaryti prižiūrėtojų komandą','—','—','todo'],['Parengti saugumo ir pirmosios pagalbos planą','—','—','todo'],['Sudaryti dalyvių grupių / eilių planą','—','—','todo'],['Parengti kvėpavimo sesijos scenarijų','—','—','todo'],['Parengti atšilimo pratimų planą','—','—','todo'],['Sutvarkyti muziką / garso įrangą','—','—','todo'],['Užtikrinti garsiakalbį su mikrofonu','Silvija','—','done'],['Parengti komunikaciją ir dalyvių instrukciją','—','—','todo'],['Patvirtinti Ignės įžanginę kalbą','Ignė','—','done'],['Suplanuoti foto / grupinę nuotrauką','—','—','todo'],['Parengti renginio dienos minutėmis grafiką','Vaidas','—','todo'],['Organizuoti pavėsinę / pastogę','Vaidas','—','done'],['Suorganizuoti laužavietę','Ieva','2026-10-04','todo'],['Suorganizuoti malkų laužui','—','—','todo'],['Paskirti atsakingą už laužo priežiūrą','—','—','todo'],['Išsiųsti senbuviams komunikaciją dėl kepurių ir poncho','—','—','done'],['Suderinti pirtį su „Ivanas muša gongą“','—','—','todo'],['Sukontaktuoti su „Sengirės“ fondu','Ignas','—','todo'],['Sukontaktuoti dėl lauko darželio WC','—','—','todo'],['Patikrinti lokaciją dvi savaites iki renginio','Vaidas','2026-09-20','todo'],['Susisiekti su žurnalistais','Ignė, Ieva, Gabrielė','—','todo'],['Pirtis','Liudas','—','done']];const state=JSON.parse(localStorage.getItem('vp-s08')||'{}');
+<div class="section"><h2>Programos karkasas</h2><div class="note"><b>Renginio eiga:</b> svečių rinkimasis → muzika / Sebastian → Ignės įžanga → bendra kvėpavimo sesija → 8–10 žmonių grupės vandenyje su prižiūrėtojais → atšilimo pratimai → bendras finalinis ratas → grupinė nuotrauka.</div></div><div class="section"><h2>Užduotys</h2><div class="tasks"><div class="row head"><div></div><div>Darbas</div><div>Atsakingas</div><div>Terminas</div><div>Statusas</div></div><div id="rows"><div class="row"><input class="check" type="checkbox" checked="" onchange="toggle(0,this.checked)"><div><b>Patvirtinti renginio datą ir vietą</b></div><div>Vaidas</div><div>—</div><div><span class="pill done">Atlikta</span></div></div><div class="row"><input class="check" type="checkbox" checked="" onchange="toggle(1,this.checked)"><div><b>Patvirtinti Wim Hof instruktorius</b></div><div>Ignė</div><div>—</div><div><span class="pill done">Atlikta</span></div></div><div class="row"><input class="check" type="checkbox" checked="" onchange="toggle(2,this.checked)"><div><b>Patvirtinti Sebastian būgnus</b></div><div>Sebastian</div><div>—</div><div><span class="pill done">Atlikta</span></div></div><div class="row"><input class="check" type="checkbox" onchange="toggle(3,this.checked)"><div><b>Sudaryti prižiūrėtojų komandą</b></div><div>—</div><div>—</div><div><span class="pill todo">Nepradėta</span></div></div><div class="row"><input class="check" type="checkbox" onchange="toggle(4,this.checked)"><div><b>Parengti saugumo ir pirmosios pagalbos planą</b></div><div>—</div><div>—</div><div><span class="pill todo">Nepradėta</span></div></div><div class="row"><input class="check" type="checkbox" onchange="toggle(5,this.checked)"><div><b>Sudaryti dalyvių grupių / eilių planą</b></div><div>—</div><div>—</div><div><span class="pill todo">Nepradėta</span></div></div><div class="row"><input class="check" type="checkbox" onchange="toggle(6,this.checked)"><div><b>Parengti kvėpavimo sesijos scenarijų</b></div><div>—</div><div>—</div><div><span class="pill todo">Nepradėta</span></div></div><div class="row"><input class="check" type="checkbox" onchange="toggle(7,this.checked)"><div><b>Parengti atšilimo pratimų planą</b></div><div>—</div><div>—</div><div><span class="pill todo">Nepradėta</span></div></div><div class="row"><input class="check" type="checkbox" onchange="toggle(8,this.checked)"><div><b>Sutvarkyti muziką / garso įrangą</b></div><div>—</div><div>—</div><div><span class="pill todo">Nepradėta</span></div></div><div class="row"><input class="check" type="checkbox" checked="" onchange="toggle(9,this.checked)"><div><b>Užtikrinti garsiakalbį su mikrofonu</b></div><div>Silvija</div><div>—</div><div><span class="pill done">Atlikta</span></div></div><div class="row"><input class="check" type="checkbox" onchange="toggle(10,this.checked)"><div><b>Parengti komunikaciją ir dalyvių instrukciją</b></div><div>—</div><div>—</div><div><span class="pill todo">Nepradėta</span></div></div><div class="row"><input class="check" type="checkbox" onchange="toggle(11,this.checked)"><div><b>Patvirtinti Ignės įžanginę kalbą</b></div><div>Ignė</div><div>—</div><div><span class="pill done">Nepradėta</span></div></div><div class="row"><input class="check" type="checkbox" onchange="toggle(12,this.checked)"><div><b>Suplanuoti foto / grupinę nuotrauką</b></div><div>—</div><div>—</div><div><span class="pill todo">Nepradėta</span></div></div><div class="row"><input class="check" type="checkbox" checked="" onchange="toggle(13,this.checked)"><div><b>Parengti renginio dienos minutėmis grafiką</b></div><div>Vaidas</div><div>—</div><div><span class="pill done">Atlikta</span></div></div><div class="row"><input class="check" type="checkbox" onchange="toggle(14,this.checked)"><div><b>Organizuoti pavėsinę / pastogę</b></div><div>Vaidas</div><div>—</div><div><span class="pill done">Nepradėta</span></div></div><div class="row"><input class="check" type="checkbox" onchange="toggle(15,this.checked)"><div><b>Suorganizuoti laužavietę</b></div><div>—</div><div>—</div><div><span class="pill todo">Nepradėta</span></div></div><div class="row"><input class="check" type="checkbox" onchange="toggle(16,this.checked)"><div><b>Suorganizuoti malkų laužui</b></div><div>—</div><div>—</div><div><span class="pill todo">Nepradėta</span></div></div><div class="row"><input class="check" type="checkbox" checked="" onchange="toggle(17,this.checked)"><div><b>Paskirti atsakingą už laužo priežiūrą</b></div><div>—</div><div>—</div><div><span class="pill done">Atlikta</span></div></div><div class="row"><input class="check" type="checkbox" onchange="toggle(18,this.checked)"><div><b>Išsiųsti senbuviams komunikaciją dėl kepurių ir poncho</b></div><div>—</div><div>—</div><div><span class="pill done">Nepradėta</span></div></div><div class="row"><input class="check" type="checkbox" onchange="toggle(19,this.checked)"><div><b>Suderinti pirtį su „Ivanas muša gongą“</b></div><div>—</div><div>—</div><div><span class="pill todo">Nepradėta</span></div></div><div class="row"><input class="check" type="checkbox" onchange="toggle(20,this.checked)"><div><b>Sukontaktuoti su „Sengirės“ fondu</b></div><div>Ignas</div><div>—</div><div><span class="pill todo">Nepradėta</span></div></div><div class="row"><input class="check" type="checkbox" onchange="toggle(21,this.checked)"><div><b>Sukontaktuoti dėl lauko darželio WC</b></div><div>—</div><div>—</div><div><span class="pill todo">Nepradėta</span></div></div><div class="row"><input class="check" type="checkbox" onchange="toggle(22,this.checked)"><div><b>Patikrinti lokaciją dvi savaites iki renginio</b></div><div>Vaidas</div><div>2026-09-20</div><div><span class="pill todo">Nepradėta</span></div></div><div class="row"><input class="check" type="checkbox" onchange="toggle(23,this.checked)"><div><b>Susisiekti su žurnalistais</b></div><div>Ignė, Ieva, Gabrielė</div><div>—</div><div><span class="pill todo">Nepradėta</span></div></div><div class="row"><input class="check" type="checkbox" checked="" onchange="toggle(24,this.checked)"><div><b>Pirtis</b></div><div>Liudas</div><div>—</div><div><span class="pill done">Atlikta</span></div></div></div></div></div><div class="section"><h2>Užduočių progresas pagal sritis</h2><div id="categoryProgress" class="category-progress-grid"></div></div></main><script>let tasks=[['Patvirtinti renginio datą ir vietą','Vaidas','—','done'],['Patvirtinti Wim Hof instruktorius','Ignė','—','done'],['Patvirtinti Sebastian būgnus','Sebastian','—','done'],['Sudaryti prižiūrėtojų komandą','—','—','todo'],['Parengti saugumo ir pirmosios pagalbos planą','—','—','todo'],['Sudaryti dalyvių grupių / eilių planą','—','—','todo'],['Parengti kvėpavimo sesijos scenarijų','—','—','todo'],['Parengti atšilimo pratimų planą','—','—','todo'],['Sutvarkyti muziką / garso įrangą','—','—','todo'],['Užtikrinti garsiakalbį su mikrofonu','Silvija','—','done'],['Parengti komunikaciją ir dalyvių instrukciją','—','—','todo'],['Patvirtinti Ignės įžanginę kalbą','Ignė','—','done'],['Suplanuoti foto / grupinę nuotrauką','—','—','todo'],['Parengti renginio dienos minutėmis grafiką','Vaidas','—','todo'],['Organizuoti pavėsinę / pastogę','Vaidas','—','done'],['Suorganizuoti laužavietę','Ieva','2026-10-04','todo'],['Suorganizuoti malkų laužui','—','—','todo'],['Paskirti atsakingą už laužo priežiūrą','—','—','todo'],['Išsiųsti senbuviams komunikaciją dėl kepurių ir poncho','—','—','done'],['Suderinti pirtį su „Ivanas muša gongą“','—','—','todo'],['Sukontaktuoti su „Sengirės“ fondu','Ignas','—','todo'],['Sukontaktuoti dėl lauko darželio WC','—','—','todo'],['Patikrinti lokaciją dvi savaites iki renginio','Vaidas','2026-09-20','todo'],['Susisiekti su žurnalistais','Ignė, Ieva, Gabrielė','—','todo'],['Pirtis','Liudas','—','done']];const state=JSON.parse(localStorage.getItem('vp-s08')||'{}');
 const savedTasks=localStorage.getItem('vp-s08-tasks');
 if(savedTasks){
   try{
@@ -166,7 +350,57 @@ async function importTasks(event){
   }
 }
 
-function render(){document.getElementById('all').textContent=tasks.length;let d=0;let groups=[{name:'📍 Lokacija & infrastruktūra',ids:[0,14,15,16,17,19,21,22,24]},{name:'🎵 Renginio dalys',ids:[1,2,3,5,6,7,8,9,12,13,18]},{name:'📣 Komunikacija',ids:[10,11,20,23]},{name:'🛡️ Organizavimas & saugumas',ids:[4]}];rows.innerHTML=groups.map(g=>{let a=g.ids.filter(i=>i<tasks.length);if(!a.length)return '';let gd=a.filter(i=>state[i]).length;return `<div class="task-group"><div class="task-group-title"><span>${g.name}</span><span class="task-group-count">${gd}/${a.length} atlikta</span></div>${a.map(i=>{let t=tasks[i],done=!!state[i];if(done)d++;return `<div class="row task-row ${done?"task-completed":""}"><input class="check" type="checkbox" ${done?'checked':''} onchange="toggle(${i},this.checked)"><div class="task-name"><b>${t[0]}</b></div><div class="owner">${t[1]}</div><div class="deadline">${t[2]}</div><div class="status"><span class="pill ${done?'done':t[3]}">${done?'Atlikta':t[3]=='doing'?'Vykdoma':'Nepradėta'}</span></div></div>`}).join('')}</div>`}).join('');document.getElementById('done').textContent=d;document.getElementById('doing').textContent=tasks.filter((t,i)=>t[3]=='doing'&&!state[i]).length;let p=Math.round(d/tasks.length*100);document.getElementById('pct').textContent=p+'%';document.getElementById('fill').style.width=p+'%'}async function toggle(i,v){
+function render(){
+  document.getElementById('all').textContent=tasks.length;
+  let d=0;
+  const groups=[
+    {name:'📍 Lokacija',ids:[0,14,15,16,17,19,21,22,24]},
+    {name:'🎵 Renginys',ids:[1,2,3,5,6,7,8,9,12,13,18]},
+    {name:'📣 Komunikacija',ids:[10,11,20,23]},
+    {name:'🛡️ Saugumas',ids:[4]}
+  ];
+  rows.innerHTML=groups.map(g=>{
+    const a=g.ids.filter(i=>i<tasks.length);
+    if(!a.length)return '';
+    const gd=a.filter(i=>state[i]).length;
+    return `<div class="task-group"><div class="task-group-title"><span>${g.name}</span><span class="task-group-count">${gd}/${a.length} atlikta</span></div>${a.map(i=>{
+      const t=tasks[i],done=!!state[i];
+      if(done)d++;
+      return `<div class="row task-row ${done?"task-completed":""}">
+        <input class="check" type="checkbox" ${done?'checked':''} onchange="toggle(${i},this.checked)">
+        <div class="task-name"><b>${t[0]}</b></div>
+        <div class="owner">${t[1]}</div>
+        <div class="deadline">${t[2]}</div>
+        <div class="status"><span class="pill ${done?'done':t[3]}">${done?'Atlikta':t[3]=='doing'?'Vykdoma':'Nepradėta'}</span></div>
+      </div>`;
+    }).join('')}</div>`;
+  }).join('');
+
+  document.getElementById('done').textContent=d;
+  document.getElementById('doing').textContent=tasks.filter((t,i)=>t[3]=='doing'&&!state[i]).length;
+  let p=Math.round(d/tasks.length*100);
+  document.getElementById('pct').textContent=p+'%';
+  document.getElementById('fill').style.width=p+'%';
+
+  const progress=document.getElementById('categoryProgress');
+  if(progress){
+    progress.innerHTML=groups.map(g=>{
+      const a=g.ids.filter(i=>i<tasks.length);
+      const done=a.filter(i=>state[i]).length;
+      const pct=a.length ? Math.round(done/a.length*100) : 0;
+      return `<div class="category-card">
+        <div class="category-card-content">
+          <div class="category-card-title">${g.name}</div>
+          <div class="category-card-progress">${done}/${a.length} atlikta · ${pct}%</div>
+        </div>
+        <div class="water-track" aria-hidden="true">
+          <div class="water-level" style="height:${pct}%"></div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+}
+async function toggle(i,v){
   state[i]=v;
   localStorage.setItem('vp-s08',JSON.stringify(state));
   render();
