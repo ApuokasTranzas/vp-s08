@@ -57,12 +57,45 @@ if(savedTasks){
   }catch(e){}
 }
 state[0]=true;state[1]=true;state[2]=true;state[9]=true;state[13]=true;state[17]=true;state[24]=true;localStorage.setItem('vp-s08',JSON.stringify(state));
-function showJsonStatus(message, ok=true){
+function showJsonStatus(message,ok=true){
   const el=document.getElementById('jsonStatus');
   if(!el)return;
   el.textContent=message;
   el.style.display='block';
   el.style.borderLeftColor=ok?'#111':'#b00020';
+}
+async function saveToServer(){
+  const payload={
+    version:1,
+    project:"VP S08",
+    tasks:tasks.map((t,i)=>({
+      title:t[0],owner:t[1],deadline:t[2],
+      plannedStatus:t[3],completed:!!state[i]
+    }))
+  };
+  const r=await fetch('/api/tasks',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(payload)
+  });
+  if(!r.ok)throw new Error('Serveris grąžino klaidą '+r.status);
+  return r.json();
+}
+async function loadFromServer(){
+  const r=await fetch('/api/tasks',{cache:'no-store'});
+  if(!r.ok)throw new Error('Serveris grąžino klaidą '+r.status);
+  const data=await r.json();
+  if(!Array.isArray(data.tasks)||!data.tasks.length)throw new Error('Serveryje nėra užduočių.');
+  tasks=data.tasks.map(t=>[
+    String(t.title??''),
+    String(t.owner??'—'),
+    String(t.deadline??'—'),
+    ['todo','doing','done'].includes(t.plannedStatus)?t.plannedStatus:'todo'
+  ]);
+  for(const k of Object.keys(state))delete state[k];
+  data.tasks.forEach((t,i)=>{state[i]=t.completed===true;});
+  localStorage.setItem('vp-s08-tasks',JSON.stringify(tasks));
+  localStorage.setItem('vp-s08',JSON.stringify(state));
 }
 function exportTasks(){
   const payload={
@@ -70,68 +103,77 @@ function exportTasks(){
     exportedAt:new Date().toISOString(),
     project:"VP S08",
     tasks:tasks.map((t,i)=>({
-      title:t[0],
-      owner:t[1],
-      deadline:t[2],
-      plannedStatus:t[3],
-      completed:!!state[i]
+      title:t[0],owner:t[1],deadline:t[2],
+      plannedStatus:t[3],completed:!!state[i]
     }))
   };
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json;charset=utf-8'});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');
-  a.href=url;
-  a.download='vp-s08-uzduotys.json';
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
+  a.href=url;a.download='vp-s08-uzduotys.json';
+  document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);
   showJsonStatus('JSON failas eksportuotas.');
 }
-function importTasks(event){
+async function importTasks(event){
   const file=event.target.files&&event.target.files[0];
   if(!file)return;
-  const reader=new FileReader();
-  reader.onload=function(){
-    try{
-      const data=JSON.parse(reader.result);
-      const incoming=Array.isArray(data)?data:data.tasks;
-      if(!Array.isArray(incoming))throw new Error('JSON faile nerastas masyvas "tasks".');
-      if(!incoming.length)throw new Error('Užduočių sąrašas tuščias.');
-      const normalized=incoming.map((t,i)=>{
-        if(Array.isArray(t)){
-          if(typeof t[0]!=='string'||!t[0].trim())throw new Error('Neteisinga užduotis #' +(i+1)+'.');
-          return [t[0],String(t[1]??'—'),String(t[2]??'—'),['todo','doing','done'].includes(t[3])?t[3]:'todo'];
-        }
-        if(!t||typeof t!=='object'||typeof t.title!=='string'||!t.title.trim()){
-          throw new Error('Neteisinga užduotis #' +(i+1)+'.');
-        }
-        return [
-          t.title.trim(),
-          String(t.owner??'—'),
-          String(t.deadline??'—'),
-          ['todo','doing','done'].includes(t.plannedStatus)?t.plannedStatus:'todo'
-        ];
-      });
-      const importedState={};
-      incoming.forEach((t,i)=>{
-        importedState[i]=Array.isArray(t)?t[4]===true:(t&&t.completed===true);
-      });
-      tasks=normalized;
-      for(const k of Object.keys(state))delete state[k];
-      Object.assign(state,importedState);
-      localStorage.setItem('vp-s08-tasks',JSON.stringify(tasks));
-      localStorage.setItem('vp-s08',JSON.stringify(state));
-      render();
-      showJsonStatus('Užduotys importuotos ir išsaugotos šiame įrenginyje.');
-    }catch(err){
-      showJsonStatus('Nepavyko importuoti JSON: '+err.message,false);
-    }finally{
-      event.target.value='';
-    }
-  };
-  reader.readAsText(file);
+  try{
+    const data=JSON.parse(await file.text());
+    const incoming=Array.isArray(data)?data:data.tasks;
+    if(!Array.isArray(incoming))throw new Error('JSON faile nerastas masyvas "tasks".');
+    if(!incoming.length)throw new Error('Užduočių sąrašas tuščias.');
+    const normalized=incoming.map((t,i)=>{
+      if(Array.isArray(t)){
+        if(typeof t[0]!=='string'||!t[0].trim())throw new Error('Neteisinga užduotis #'+(i+1)+'.');
+        return [t[0],String(t[1]??'—'),String(t[2]??'—'),
+          ['todo','doing','done'].includes(t[3])?t[3]:'todo'];
+      }
+      if(!t||typeof t!=='object'||typeof t.title!=='string'||!t.title.trim())
+        throw new Error('Neteisinga užduotis #'+(i+1)+'.');
+      return [t.title.trim(),String(t.owner??'—'),String(t.deadline??'—'),
+        ['todo','doing','done'].includes(t.plannedStatus)?t.plannedStatus:'todo'];
+    });
+    const importedState={};
+    incoming.forEach((t,i)=>{importedState[i]=Array.isArray(t)?t[4]===true:t.completed===true;});
+    tasks=normalized;
+    for(const k of Object.keys(state))delete state[k];
+    Object.assign(state,importedState);
+    await saveToServer();
+    localStorage.setItem('vp-s08-tasks',JSON.stringify(tasks));
+    localStorage.setItem('vp-s08',JSON.stringify(state));
+    render();
+    showJsonStatus('Užduotys importuotos ir išsaugotos serveryje.');
+  }catch(err){
+    showJsonStatus('Nepavyko importuoti JSON: '+err.message,false);
+  }finally{
+    event.target.value='';
+  }
 }
 
-function render(){document.getElementById('all').textContent=tasks.length;let d=0;let groups=[{name:'📍 Lokacija & infrastruktūra',ids:[0,14,15,16,17,19,21,22,24]},{name:'🎵 Renginio dalys',ids:[1,2,3,5,6,7,8,9,12,13,18]},{name:'📣 Komunikacija',ids:[10,11,20,23]},{name:'🛡️ Organizavimas & saugumas',ids:[4]}];rows.innerHTML=groups.map(g=>{let a=g.ids.filter(i=>i<tasks.length);if(!a.length)return '';let gd=a.filter(i=>state[i]).length;return `<div class="task-group"><div class="task-group-title"><span>${g.name}</span><span class="task-group-count">${gd}/${a.length} atlikta</span></div>${a.map(i=>{let t=tasks[i],done=!!state[i];if(done)d++;return `<div class="row task-row ${done?"task-completed":""}"><input class="check" type="checkbox" ${done?'checked':''} onchange="toggle(${i},this.checked)"><div class="task-name"><b>${t[0]}</b></div><div class="owner">${t[1]}</div><div class="deadline">${t[2]}</div><div class="status"><span class="pill ${done?'done':t[3]}">${done?'Atlikta':t[3]=='doing'?'Vykdoma':'Nepradėta'}</span></div></div>`}).join('')}</div>`}).join('');document.getElementById('done').textContent=d;document.getElementById('doing').textContent=tasks.filter((t,i)=>t[3]=='doing'&&!state[i]).length;let p=Math.round(d/tasks.length*100);document.getElementById('pct').textContent=p+'%';document.getElementById('fill').style.width=p+'%'}function toggle(i,v){state[i]=v;localStorage.setItem('vp-s08',JSON.stringify(state));render()}function resetAll(){localStorage.removeItem('vp-s08');localStorage.removeItem('vp-s08-tasks');location.reload()}render();</script>
+function render(){document.getElementById('all').textContent=tasks.length;let d=0;let groups=[{name:'📍 Lokacija & infrastruktūra',ids:[0,14,15,16,17,19,21,22,24]},{name:'🎵 Renginio dalys',ids:[1,2,3,5,6,7,8,9,12,13,18]},{name:'📣 Komunikacija',ids:[10,11,20,23]},{name:'🛡️ Organizavimas & saugumas',ids:[4]}];rows.innerHTML=groups.map(g=>{let a=g.ids.filter(i=>i<tasks.length);if(!a.length)return '';let gd=a.filter(i=>state[i]).length;return `<div class="task-group"><div class="task-group-title"><span>${g.name}</span><span class="task-group-count">${gd}/${a.length} atlikta</span></div>${a.map(i=>{let t=tasks[i],done=!!state[i];if(done)d++;return `<div class="row task-row ${done?"task-completed":""}"><input class="check" type="checkbox" ${done?'checked':''} onchange="toggle(${i},this.checked)"><div class="task-name"><b>${t[0]}</b></div><div class="owner">${t[1]}</div><div class="deadline">${t[2]}</div><div class="status"><span class="pill ${done?'done':t[3]}">${done?'Atlikta':t[3]=='doing'?'Vykdoma':'Nepradėta'}</span></div></div>`}).join('')}</div>`}).join('');document.getElementById('done').textContent=d;document.getElementById('doing').textContent=tasks.filter((t,i)=>t[3]=='doing'&&!state[i]).length;let p=Math.round(d/tasks.length*100);document.getElementById('pct').textContent=p+'%';document.getElementById('fill').style.width=p+'%'}async function toggle(i,v){
+  state[i]=v;
+  localStorage.setItem('vp-s08',JSON.stringify(state));
+  render();
+  try{
+    await saveToServer();
+    showJsonStatus('Pakeitimas išsaugotas serveryje.');
+  }catch(e){
+    showJsonStatus('Pakeitimas liko telefone, bet nepavyko išsaugoti serveryje.',false);
+  }
+}
+function resetAll(){
+  localStorage.removeItem('vp-s08');
+  localStorage.removeItem('vp-s08-tasks');
+  location.reload();
+}
+(async function init(){
+  try{
+    await loadFromServer();
+    render();
+    showJsonStatus('Duomenys užkrauti iš serverio.');
+  }catch(e){
+    render();
+    showJsonStatus('Serverio duomenys nepasiekiami — naudojama šiame įrenginyje išsaugota kopija.',false);
+  }
+})();</script>
 <div role="status" aria-live="polite" aria-atomic="true" style="position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0px; border: 0px; overflow: hidden; clip: rect(0px, 0px, 0px, 0px); clip-path: inset(50%); white-space: nowrap;"></div><div role="alert" aria-live="assertive" aria-atomic="true" style="position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0px; border: 0px; overflow: hidden; clip: rect(0px, 0px, 0px, 0px); clip-path: inset(50%); white-space: nowrap;"></div></body></html>
